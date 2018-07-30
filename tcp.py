@@ -54,8 +54,7 @@ def tcp_server(bind_ip, bind_port, username, command_mode):
                         "内部コマンドまたは外部コマンド、またはバッチ ファイルとして認識されていません。".encode("utf-8"))
         else:
             print(request)
-            client_socket.send(
-                (username+" --> "+input(username+" --> ")).encode("utf-8"))
+            client_socket.send("OK".encode("utf-8"))
 
         client_socket.close()
 
@@ -88,7 +87,7 @@ def tcp_client(target_ip, target_port, username, command_mode):
                 file_receiver(client, True)
         else:
             client.send(
-                (username+" --> "+input(username+" --> ")).encode("utf-8"))
+                (username + " --> " + input(username + " --> ")).encode("utf-8"))
 
         response = client.recv(4096).decode("utf-8")
 
@@ -122,13 +121,11 @@ def file_sender(send_socket, attacker):
         if save_path == "False":
             return
 
-    file_size = 0
     file_descriptor = open(file_path, "rb")
 
     while True:
         data = file_descriptor.read(4096)
-        file_size += len(data)
-        time.sleep(0.05)
+        time.sleep(0.2)
         if len(data) == 0:
             break
         else:
@@ -170,13 +167,10 @@ def file_receiver(receive_socket, attacker):
             receive_socket.send("False".encode("utf-8"))
             return
 
-    file_size = 0
     file_buffer = b""
 
     while True:
         data = receive_socket.recv(4096)
-        file_size += len(data)
-        print(file_size)
 
         if data == b"End":
             break
@@ -209,6 +203,10 @@ def main():
         sys.exit()
 
     for o, a in opts:
+        if o in ("-i", "--ip"):
+            ip_address = a
+        if o in ("-p", "--port"):
+            port_num = a
         if o in ("-v", "--version"):
             version()
             sys.exit()
@@ -220,10 +218,6 @@ def main():
             server_mode = True
         if o in ("-c", "--command"):
             command_mode = True
-        if o in ("-i", "--ip"):
-            ip_address = a
-        if o in ("-p", "--port"):
-            port_num = a
 
     if (ip_address is None or port_num is None):
         usage()

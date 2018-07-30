@@ -14,10 +14,10 @@ import subprocess
 
 def usage():
     print()
-    print("tcp.py  --ip      = <IP-ADDRESS>")
-    print("        --port    = <PORT-NUMBER>")
-    print("        --server  = <SERVER-MODE>")
-    print("        --command = <COMMAND-MODE>")
+    print("tcp.exe  --ip      = <IP-ADDRESS>")
+    print("         --port    = <PORT-NUMBER>")
+    print("         --server  = <SERVER-MODE>")
+    print("         --command = <COMMAND-MODE>")
     print()
 
 
@@ -54,8 +54,7 @@ def tcp_server(bind_ip, bind_port, username, command_mode):
                         "内部コマンドまたは外部コマンド、またはバッチ ファイルとして認識されていません。".encode("shift-jis"))
         else:
             print(request)
-            client_socket.send(
-                (username+" --> "+input(username+" --> ")).encode("shift-jis"))
+            client_socket.send("OK".encode("shift-jis"))
 
         client_socket.close()
 
@@ -88,16 +87,16 @@ def tcp_client(target_ip, target_port, username, command_mode):
                 file_receiver(client, True)
         else:
             client.send(
-                (username+" --> "+input(username+" --> ")).encode("shift-jis"))
+                (username + " --> " + input(username + " --> ")).encode("shift-jis"))
 
         response = client.recv(4096).decode("shift-jis")
 
         print(response)
 
 
-def file_sender(send_socket, attacker):
+def file_sender(send_socket, isClient):
 
-    if attacker:
+    if isClient:
         file_path = input("(FROM)--> ")
         if not os.path.isfile(file_path):
             send_socket.send("Not Found".encode("shift-jis"))
@@ -122,11 +121,14 @@ def file_sender(send_socket, attacker):
         if save_path == "False":
             return
 
+    file_size = 0
     file_descriptor = open(file_path, "rb")
 
     while True:
         data = file_descriptor.read(4096)
-        time.sleep(0.2)
+        file_size += len(data)
+        print(file_size)
+        time.sleep(0.05)
         if len(data) == 0:
             break
         else:
@@ -168,10 +170,13 @@ def file_receiver(receive_socket, attacker):
             receive_socket.send("False".encode("shift-jis"))
             return
 
+    file_size = 0
     file_buffer = b""
 
     while True:
         data = receive_socket.recv(4096)
+        file_size += len(data)
+        print(file_size)
 
         if data == b"End":
             break
@@ -220,7 +225,7 @@ def main():
         if o in ("-p", "--port"):
             port_num = a
 
-    if (ip_address == None or port_num == None):
+    if (ip_address is None or port_num is None):
         usage()
         sys.exit()
 
@@ -230,7 +235,7 @@ def main():
     print("COMMAND_MODE: %s" % (command_mode,))
     print()
 
-    if server_mode == True:
+    if server_mode is True:
         tcp_server(ip_address, int(port_num), username, command_mode)
     else:
         tcp_client(ip_address, int(port_num), username, command_mode)
