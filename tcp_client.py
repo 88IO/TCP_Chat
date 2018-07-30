@@ -7,21 +7,72 @@ Created on Sat Jun  3 03:01:52 2017
 """
 
 import socket
-import cv2
+import os
+import getopt
+import sys
 
-cap = cv2.VideoCapture(0)
 
-target_host = "196.168.43.21"
-target_port = 80
+def usage():
+    print()
+    print("tcp_client.exe --ip   = <IP-ADDRESS>")
+    print("               --port = <PORT-NUMBER>")
 
-while cap.isOpened():
 
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+def version():
+    print("Version: 0.0.1")
+    print()
 
-    client.connect((target_host, target_port))
 
-    client.send(cv2.read()[1])  # input("words : ").encode("utf-8"))
+def tcp_client(target_ip, target_port, username):
 
-    response = client.recv(4096)
+    while True:
 
-    print(response.decode("utf-8"))
+        client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+        client.connect((target_ip, target_port))
+
+        client.send(
+            (username + " --> " + input(username + " --> ")).encode("utf-8"))
+
+        response = client.recv(4096)
+
+        print(response.decode("utf-8"))
+
+
+def main():
+    target_ip = None
+    target_port = None
+    username = os.environ.get("USERNAME")
+
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "i:p:hv", [
+                                   "ip=", "port=", "help", "version"])
+    except getopt.GetoptError:
+        usage()
+        sys.exit()
+
+    for o, a in opts:
+        if o in ("-v", "--version"):
+            version()
+            sys.exit()
+        if o in ("-h", "--help"):
+            usage()
+            sys.exit()
+        if o in ("-i", "--ip"):
+            target_ip = a
+        if o in ("-p", "--port"):
+            target_port = a
+
+    if (target_ip is None or target_port is None):
+        usage()
+        sys.exit(0)
+
+    print("Target_IP:   %s" % (target_ip,))
+    print("Target_PORT: %s" % (target_port,))
+    print()
+
+    tcp_client(target_ip, int(target_port), username)
+
+
+if __name__ == "__main__":
+    main()
